@@ -1,0 +1,13 @@
+{
+  "name": "senior-assist-automation",
+  "version": "1.0.0",
+  "description": "Browser automation for food/ride ordering",
+  "main": "doordash.js",
+  "scripts": {
+    "test": "node doordash.js"
+  },
+  "dependencies": {
+    "playwright": "^1.40.0",
+    "dotenv": "^16.3.1"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "name": "senior-assist-mvp",
+  "version": "1.0.0",
+  "description": "Voice-based AI assistant for seniors to order food/rides via phone",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install && cd ../automation && npm install && npx playwright install chromium",
+    "setup": "echo 'Run: npm run install:all' && echo 'Then configure backend/.env' && echo 'Then: npm run dev'"
+  },
+  "keywords": ["voice", "ai", "seniors", "accessibility", "doordash", "uber"],
+  "author": "Vedant Agarwal",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
