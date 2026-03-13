@@ -169,9 +169,9 @@
 
 ## 🎥 Demo Links
 
-- **Live Demo:** [https://senior-assist-demo.vercel.app](TODO)
-- **Video Walkthrough:** [https://youtube.com/watch?v=...](TODO)
-- **GitHub:** [https://github.com/vedantagarwal/senior-assist](TODO)
+- **GitHub:** [https://github.com/vedantagarwal-web/senior-assist](https://github.com/vedantagarwal-web/senior-assist)
+- **Live Demo:** [Deploy to Vercel/Render for live demo]
+- **Video Walkthrough:** [Record demo video for YouTube]
 
 ---
 

@@ -2,7 +2,7 @@
 
 > **Voice-powered AI assistant helping seniors order food and book rides with just a phone call.**
 
-[![Demo](https://img.shields.io/badge/demo-live-green)](TODO)
+[![GitHub](https://img.shields.io/badge/github-vedantagarwal--web%2Fsenior--assist-blue)](https://github.com/vedantagarwal-web/senior-assist)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 ---
@@ -236,6 +236,7 @@ MIT License - see [LICENSE](LICENSE) for details
 - UC Berkeley (Math & Physics)
 - [vedantagarwal.xyz](https://vedantagarwal.xyz)
 - [@V_Agarwal1](https://twitter.com/V_Agarwal1)
+- [GitHub](https://github.com/vedantagarwal-web)
 
 ---
 
