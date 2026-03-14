@@ -6,6 +6,10 @@ const twilio = require('twilio');
 const VoiceResponse = twilio.twiml.VoiceResponse;
 const db = require('./database');
 const voicePipeline = require('./voicePipeline');
+const openclawAgent = require('./openclawAgent');
+
+// Toggle between simple pipeline and OpenClaw agent
+const USE_OPENCLAW_AGENT = process.env.USE_OPENCLAW_AGENT === 'true';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -78,8 +82,23 @@ app.post('/voice/process', async (req, res) => {
     return;
   }
   
-  // Process with voice pipeline (OpenClaw agent + automation)
-  const response = await voicePipeline.process(speechResult, user, callSid);
+  // Process with voice pipeline or OpenClaw agent
+  let response;
+  if (USE_OPENCLAW_AGENT) {
+    console.log('🤖 Using OpenClaw agent for processing');
+    response = await openclawAgent.processWithAgent(user.phone, speechResult, {
+      callSid,
+      step: 'processing'
+    });
+    
+    // Execute any actions returned by agent
+    if (response.actions && response.actions.length > 0) {
+      await openclawAgent.executeActions(user.phone, response.actions);
+    }
+  } else {
+    console.log('📞 Using simple voice pipeline');
+    response = await voicePipeline.process(speechResult, user, callSid);
+  }
   
   const twiml = new VoiceResponse();
   twiml.say({

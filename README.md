@@ -17,12 +17,23 @@
 
 ## ✨ Features
 
+### Core Functionality
 - 📞 **Voice Interface** — Natural conversation, no apps to learn
 - 🍕 **Food Ordering** — DoorDash integration via browser automation
 - 🚗 **Ride Booking** — Uber/Lyft support (coming soon)
 - 👪 **Caregiver Portal** — Family members manage preferences & payment
 - 📊 **Order History** — Track all activity in one dashboard
 - 🔒 **Secure** — Tokenized payments, no credit cards stored
+
+### 🤖 Autonomous Features (OpenClaw-Powered)
+- 🧠 **Real AI Agents** — Uses OpenClaw sessions for intelligent conversation (not hardcoded logic)
+- 🔮 **Proactive Suggestions** — Learns patterns and suggests orders autonomously
+- 🏥 **Self-Healing** — Monitors health and auto-recovers from failures
+- 🎭 **Multi-Agent Orchestration** — Spawns specialized agents for complex tasks
+- ⏰ **Scheduled Operations** — Cron jobs for monitoring, learning, reporting
+- 📈 **Pattern Learning** — Analyzes order history to improve service over time
+
+👉 See [AUTONOMOUS.md](AUTONOMOUS.md) for full details
 
 ---
 
@@ -61,6 +72,7 @@ ngrok http 3001
 ## 📚 Documentation
 
 - **[SETUP.md](SETUP.md)** — Detailed setup instructions
+- **[AUTONOMOUS.md](AUTONOMOUS.md)** — 🤖 **Autonomous features powered by OpenClaw agents**
 - **[TEST.md](TEST.md)** — Testing guide & scenarios
 - **[DEMO_SCRIPT.md](DEMO_SCRIPT.md)** — Step-by-step demo script for presentations
 - **[DEPLOY.md](DEPLOY.md)** — Production deployment guide
@@ -188,6 +200,11 @@ node doordash.js '{"restaurantUrl":"...","items":["Pizza"],...}'
 - [x] Loading states & user feedback
 - [x] Phone number formatting & validation
 - [x] Comprehensive documentation
+- [x] 🤖 **OpenClaw agent integration** (real AI, not hardcoded)
+- [x] 🔮 **Autonomous monitoring** (learns patterns, proactive suggestions)
+- [x] 🏥 **Self-healing system** (health checks, auto-recovery)
+- [x] 🎭 **Multi-agent orchestration** (complex task coordination)
+- [x] ⏰ **Scheduled cron jobs** (autonomous background operations)
 
 ### Phase 1 (Production)
 - [ ] DoorDash API integration (partner access)

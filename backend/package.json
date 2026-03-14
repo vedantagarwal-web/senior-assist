@@ -7,6 +7,8 @@
     "dev": "nodemon server.js",
     "start": "node server.js",
     "seed": "node seedData.js",
+    "monitor": "node autonomousMonitor.js",
+    "setup-cron": "node setupCron.js",
     "test": "echo 'No tests yet' && exit 0"
   },
   "dependencies": {
