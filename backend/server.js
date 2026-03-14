@@ -107,6 +107,22 @@ app.post('/voice/process', async (req, res) => {
 app.post('/api/users', async (req, res) => {
   try {
     const { name, phone, address, email, caregiverName, caregiverEmail } = req.body;
+    
+    // Validation
+    if (!name || !phone) {
+      return res.status(400).json({ success: false, error: 'Name and phone are required' });
+    }
+    
+    if (!phone.match(/^\+1\d{10}$/)) {
+      return res.status(400).json({ success: false, error: 'Phone must be in format +1XXXXXXXXXX' });
+    }
+    
+    // Check if user already exists
+    const existing = await db.getUserByPhone(phone);
+    if (existing) {
+      return res.status(409).json({ success: false, error: 'User with this phone number already exists' });
+    }
+    
     const userId = await db.createUser({
       name,
       phone,
@@ -115,9 +131,11 @@ app.post('/api/users', async (req, res) => {
       caregiverName,
       caregiverEmail
     });
+    
+    console.log(`✅ Created user: ${name} (${phone})`);
     res.json({ success: true, userId });
   } catch (error) {
-    console.error('Error creating user:', error);
+    console.error('❌ Error creating user:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
@@ -125,14 +143,15 @@ app.post('/api/users', async (req, res) => {
 // API: Get user profile
 app.get('/api/users/:phone', async (req, res) => {
   try {
-    const user = await db.getUserByPhone(req.params.phone);
+    const phone = decodeURIComponent(req.params.phone);
+    const user = await db.getUserByPhone(phone);
     if (!user) {
-      res.status(404).json({ success: false, error: 'User not found' });
-      return;
+      return res.status(404).json({ success: false, error: 'User not found' });
     }
+    console.log(`📋 Fetched user: ${user.name}`);
     res.json({ success: true, user });
   } catch (error) {
-    console.error('Error fetching user:', error);
+    console.error('❌ Error fetching user:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });

@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
+import LoadingSpinner from '../components/LoadingSpinner';
+import Alert from '../components/Alert';
 
 interface Order {
   id: number;
@@ -12,32 +15,51 @@ interface Order {
 }
 
 export default function Dashboard() {
-  const [phone, setPhone] = useState('');
+  const searchParams = useSearchParams();
+  const [phone, setPhone] = useState(searchParams.get('phone') || '');
   const [user, setUser] = useState<any>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (searchParams.get('phone')) {
+      loadData();
+    }
+  }, []);
 
   const loadData = async () => {
-    if (!phone) return;
+    if (!phone) {
+      setError('Please enter a phone number');
+      return;
+    }
     
     setLoading(true);
+    setError('');
+    setUser(null);
+    setOrders([]);
+    
     try {
       // Fetch user
-      const userRes = await fetch(`http://localhost:3001/api/users/${phone}`);
-      if (userRes.ok) {
-        const userData = await userRes.json();
-        setUser(userData.user);
+      const userRes = await fetch(`http://localhost:3001/api/users/${encodeURIComponent(phone)}`);
+      if (!userRes.ok) {
+        if (userRes.status === 404) {
+          throw new Error('User not found. Please check the phone number or create a new profile.');
+        }
+        throw new Error('Failed to load user data');
       }
+      const userData = await userRes.json();
+      setUser(userData.user);
 
       // Fetch orders
-      const ordersRes = await fetch(`http://localhost:3001/api/users/${phone}/orders`);
+      const ordersRes = await fetch(`http://localhost:3001/api/users/${encodeURIComponent(phone)}/orders`);
       if (ordersRes.ok) {
         const ordersData = await ordersRes.json();
         setOrders(ordersData.orders);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error loading data:', error);
-      alert('Error loading data. Make sure the backend is running.');
+      setError(error.message || 'Error loading data. Make sure the backend is running.');
     }
     setLoading(false);
   };
@@ -60,7 +82,11 @@ export default function Dashboard() {
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <h1 className="text-3xl font-bold mb-8">Dashboard</h1>
 
-        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+        {error && (
+          <Alert type="error" message={error} onClose={() => setError('')} />
+        )}
+
+        <div className="bg-white rounded-lg shadow-md p-6 mb-8 mt-4">
           <h2 className="text-lg font-semibold mb-4">Select Profile</h2>
           <div className="flex gap-4">
             <input
@@ -72,10 +98,17 @@ export default function Dashboard() {
             />
             <button
               onClick={loadData}
-              disabled={loading}
-              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+              disabled={loading || !phone}
+              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
-              {loading ? 'Loading...' : 'Load'}
+              {loading ? (
+                <>
+                  <LoadingSpinner size="sm" />
+                  <span>Loading...</span>
+                </>
+              ) : (
+                'Load Profile'
+              )}
             </button>
           </div>
         </div>
@@ -143,7 +176,14 @@ export default function Dashboard() {
           </>
         )}
 
-        {!user && !loading && (
+        {loading && (
+          <div className="bg-white rounded-lg shadow-md p-12 flex flex-col items-center justify-center">
+            <LoadingSpinner size="lg" />
+            <p className="mt-4 text-gray-600">Loading profile...</p>
+          </div>
+        )}
+
+        {!user && !loading && !error && (
           <div className="bg-blue-50 rounded-lg p-8 text-center">
             <h3 className="text-xl font-semibold mb-2">Get Started</h3>
             <p className="text-gray-600 mb-4">

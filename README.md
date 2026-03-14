@@ -62,7 +62,10 @@ ngrok http 3001
 
 - **[SETUP.md](SETUP.md)** — Detailed setup instructions
 - **[TEST.md](TEST.md)** — Testing guide & scenarios
+- **[DEMO_SCRIPT.md](DEMO_SCRIPT.md)** — Step-by-step demo script for presentations
+- **[DEPLOY.md](DEPLOY.md)** — Production deployment guide
 - **[HACKATHON.md](HACKATHON.md)** — Hackathon pitch & roadmap
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** — Contribution guidelines
 
 ---
 
@@ -174,11 +177,17 @@ node doordash.js '{"restaurantUrl":"...","items":["Pizza"],...}'
 
 ## 🛣️ Roadmap
 
-### MVP (Current)
+### MVP (Current) ✅
 - [x] Voice calling via Twilio
 - [x] DoorDash browser automation
-- [x] Caregiver web portal
+- [x] Caregiver web portal (with validation & error handling)
 - [x] Order history tracking
+- [x] Demo data seeding
+- [x] Docker support
+- [x] Better error recovery in conversation flow
+- [x] Loading states & user feedback
+- [x] Phone number formatting & validation
+- [x] Comprehensive documentation
 
 ### Phase 1 (Production)
 - [ ] DoorDash API integration (partner access)

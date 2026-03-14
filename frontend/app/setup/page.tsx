@@ -2,9 +2,15 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import PhoneInput from '../components/PhoneInput';
+import LoadingSpinner from '../components/LoadingSpinner';
+import Alert from '../components/Alert';
 
 export default function Setup() {
   const [step, setStep] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
   const [formData, setFormData] = useState({
     seniorName: '',
     seniorPhone: '',
@@ -17,8 +23,15 @@ export default function Setup() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
+    setError('');
     
     try {
+      // Validate phone number format
+      if (!formData.seniorPhone.match(/^\+1\d{10}$/)) {
+        throw new Error('Please enter a valid US phone number');
+      }
+      
       // Create user
       const response = await fetch('http://localhost:3001/api/users', {
         method: 'POST',
@@ -33,22 +46,30 @@ export default function Setup() {
         }),
       });
 
-      if (!response.ok) throw new Error('Failed to create user');
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to create user');
+      }
 
       // Add restaurants
       for (const restaurant of formData.restaurants) {
-        await fetch(`http://localhost:3001/api/users/${formData.seniorPhone}/restaurants`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(restaurant),
-        });
+        if (restaurant.name && restaurant.doordashUrl) {
+          await fetch(`http://localhost:3001/api/users/${formData.seniorPhone}/restaurants`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(restaurant),
+          });
+        }
       }
 
-      alert('✅ Setup complete! Your loved one can now call the number to start ordering.');
-      window.location.href = '/dashboard';
-    } catch (error) {
+      setSuccess(true);
+      setTimeout(() => {
+        window.location.href = `/dashboard?phone=${encodeURIComponent(formData.seniorPhone)}`;
+      }, 2000);
+    } catch (error: any) {
       console.error('Setup error:', error);
-      alert('Error during setup. Please try again.');
+      setError(error.message || 'Error during setup. Please try again.');
+      setLoading(false);
     }
   };
 
@@ -94,7 +115,19 @@ export default function Setup() {
           ))}
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-8">
+        {error && (
+          <Alert type="error" message={error} onClose={() => setError('')} />
+        )}
+        
+        {success && (
+          <Alert
+            type="success"
+            title="Setup Complete!"
+            message="Redirecting to dashboard..."
+          />
+        )}
+
+        <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-8 mt-4">
           {step === 1 && (
             <div>
               <h2 className="text-xl font-semibold mb-4">Step 1: Senior Information</h2>
@@ -112,20 +145,13 @@ export default function Setup() {
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium mb-1">Senior's Phone Number *</label>
-                  <input
-                    type="tel"
-                    required
-                    value={formData.seniorPhone}
-                    onChange={(e) => setFormData({ ...formData, seniorPhone: e.target.value })}
-                    className="w-full border rounded-lg px-4 py-2"
-                    placeholder="+1234567890"
-                  />
-                  <p className="text-sm text-gray-500 mt-1">
-                    This is the number they'll call from
-                  </p>
-                </div>
+                <PhoneInput
+                  value={formData.seniorPhone}
+                  onChange={(value) => setFormData({ ...formData, seniorPhone: value })}
+                  required
+                  label="Senior's Phone Number"
+                  helpText="This is the number they'll call from"
+                />
 
                 <div>
                   <label className="block text-sm font-medium mb-1">Home Address *</label>
@@ -273,9 +299,17 @@ export default function Setup() {
                 </button>
                 <button
                   type="submit"
-                  className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition"
+                  disabled={loading}
+                  className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
-                  Complete Setup ✓
+                  {loading ? (
+                    <>
+                      <LoadingSpinner size="sm" />
+                      <span>Setting up...</span>
+                    </>
+                  ) : (
+                    <>Complete Setup ✓</>
+                  )}
                 </button>
               </div>
             </div>

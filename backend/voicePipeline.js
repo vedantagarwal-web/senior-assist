@@ -84,6 +84,9 @@ async function handleFoodOrder(speechInput, user, state) {
   // Get favorite restaurants
   const favorites = await db.getFavoriteRestaurants(user.phone);
   
+  // Initialize retry counter if not present
+  if (!state.retries) state.retries = 0;
+  
   switch (state.step) {
     case 'initial':
     case 'waiting_intent':
@@ -91,15 +94,15 @@ async function handleFoodOrder(speechInput, user, state) {
       if (favorites.length > 0) {
         const restaurantList = favorites.slice(0, 3).map(r => r.name).join(', or ');
         return {
-          message: `Great! Would you like to order from ${restaurantList}? Or somewhere else?`,
+          message: `Great! I can help you order food. Would you like to order from ${restaurantList}? Or I can help you find somewhere else.`,
           shouldContinue: true,
-          state: { ...state, step: 'choosing_restaurant' }
+          state: { ...state, step: 'choosing_restaurant', retries: 0 }
         };
       } else {
         return {
-          message: 'I don\'t have any favorite restaurants saved for you yet. Please ask your family member to add some restaurants to your account first.',
-          shouldContinue: false,
-          state
+          message: 'I\'d love to help you order food, but I don\'t have any favorite restaurants saved yet. Please ask your family member to add some restaurants to your account through the website first. Is there anything else I can help you with?',
+          shouldContinue: true,
+          state: { ...state, intent: null, step: 'initial' }
         };
       }
       
@@ -128,11 +131,29 @@ async function handleFoodOrder(speechInput, user, state) {
           };
         }
       } else {
-        return {
-          message: `I didn't catch that. Could you say the restaurant name again? Your options are: ${favorites.map(r => r.name).join(', ')}`,
-          shouldContinue: true,
-          state
-        };
+        state.retries = (state.retries || 0) + 1;
+        
+        if (state.retries >= 3) {
+          return {
+            message: 'I\'m having trouble understanding which restaurant you\'d like. Let me transfer you to someone who can help, or you can try calling back later.',
+            shouldContinue: false,
+            state
+          };
+        }
+        
+        if (state.retries === 1) {
+          return {
+            message: `I didn't quite catch that. Could you please say the restaurant name again? Your saved restaurants are: ${favorites.map(r => r.name).join(', ')}`,
+            shouldContinue: true,
+            state
+          };
+        } else {
+          return {
+            message: `I'm still having trouble hearing you. Let's try one more time. Please say one of these restaurant names slowly and clearly: ${favorites.map(r => r.name).join(', or ')}`,
+            shouldContinue: true,
+            state
+          };
+        }
       }
       
     case 'choosing_items':
@@ -159,9 +180,11 @@ async function handleFoodOrder(speechInput, user, state) {
       }
       
     case 'confirming':
-      if (lower.includes('yes') || lower.includes('confirm') || lower.includes('place') || lower.includes('sure')) {
+      if (lower.includes('yes') || lower.includes('confirm') || lower.includes('place') || lower.includes('sure') || lower.includes('okay') || lower.includes('please')) {
         // Place the order via browser automation
         try {
+          console.log(`📞 Placing order for ${user.name}: ${state.items.join(', ')} from ${state.restaurant.name}`);
+          
           const orderId = await placeOrder(user, state.restaurant, state.items);
           
           // Save to database
@@ -175,29 +198,56 @@ async function handleFoodOrder(speechInput, user, state) {
             callSid: state.callSid
           });
           
+          console.log(`✅ Order placed successfully! Order ID: ${orderId}`);
+          
           return {
-            message: `Perfect! Your order has been placed. It should arrive in about 30 to 45 minutes. Is there anything else I can help with?`,
+            message: `Perfect! Your order from ${state.restaurant.name} has been placed and will be delivered to ${user.address}. You can expect it to arrive in about 30 to 45 minutes. Is there anything else I can help you with today?`,
             shouldContinue: true,
-            state: { step: 'initial', intent: null, restaurant: null, items: [], confirmed: false }
+            state: { step: 'initial', intent: null, restaurant: null, items: [], confirmed: false, retries: 0 }
           };
         } catch (error) {
-          console.error('Error placing order:', error);
+          console.error('❌ Error placing order:', error);
           return {
-            message: 'I\'m sorry, I had trouble placing that order. Let me transfer you to someone who can help.',
+            message: 'I\'m very sorry, but I\'m having trouble placing that order right now. This might be a temporary issue. Would you like me to help you try again, or shall I transfer you to someone who can place the order manually?',
+            shouldContinue: true,
+            state: { ...state, step: 'error_recovery' }
+          };
+        }
+      } else if (lower.includes('no') || lower.includes('cancel') || lower.includes('don\'t') || lower.includes('stop')) {
+        return {
+          message: 'No problem! Would you like to order something different, or can I help you with something else?',
+          shouldContinue: true,
+          state: { step: 'initial', intent: null, restaurant: null, items: [], confirmed: false, retries: 0 }
+        };
+      } else {
+        state.retries = (state.retries || 0) + 1;
+        
+        if (state.retries >= 2) {
+          return {
+            message: 'I\'m having trouble understanding. I\'ll cancel this order for now. Feel free to call back when you\'re ready. Goodbye!',
             shouldContinue: false,
             state
           };
         }
-      } else if (lower.includes('no') || lower.includes('cancel')) {
+        
         return {
-          message: 'No problem! Let me know if you\'d like to order something else.',
+          message: 'I didn\'t quite catch that. To place this order, please say "yes" or "confirm". To cancel, say "no" or "cancel".',
           shouldContinue: true,
-          state: { step: 'initial', intent: null, restaurant: null, items: [], confirmed: false }
+          state
+        };
+      }
+      
+    case 'error_recovery':
+      if (lower.includes('try again') || lower.includes('yes')) {
+        return {
+          message: 'Okay, let\'s start over. What would you like to order?',
+          shouldContinue: true,
+          state: { step: 'initial', intent: 'order_food', restaurant: null, items: [], confirmed: false, retries: 0 }
         };
       } else {
         return {
-          message: 'I didn\'t catch that. Should I place the order? Please say yes or no.',
-          shouldContinue: true,
+          message: 'I understand. Let me connect you with someone who can help you directly. Please hold.',
+          shouldContinue: false,
           state
         };
       }
